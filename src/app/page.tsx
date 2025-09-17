@@ -1,8 +1,16 @@
 import { TopOpportunities, SectionTitle } from '@/components/DashboardCards';
+import { headers } from 'next/headers';
+
+function baseUrl() {
+  const h = headers();
+  const host = h.get('x-forwarded-host') ?? h.get('host');
+  const proto = h.get('x-forwarded-proto') ?? 'http';
+  if (!host) return process.env.NEXT_PUBLIC_BASE_URL ?? 'http://localhost:3000';
+  return `${proto}://${host}`;
+}
 
 async function getTop() {
-  const base = process.env.NEXT_PUBLIC_BASE_URL ?? '';
-  const res = await fetch(`${base}/api/scan/top`, { cache: 'no-store' });
+  const res = await fetch(`${baseUrl()}/api/scan/top`, { cache: 'no-store' });
   if (!res.ok) return { items: [] };
   return res.json();
 }

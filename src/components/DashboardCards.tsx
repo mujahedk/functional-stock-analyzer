@@ -4,13 +4,16 @@ import { Badge } from "@/components/ui/badge";
 import Link from "next/link";
 
 export function TopOpportunities({ items }:{ items:any[] }) {
+  if (!items?.length) {
+    return <div className="text-sm text-muted-foreground">No opportunities yet. Try reloading in a few seconds.</div>;
+  }
   return (
     <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
       {items.map((it:any) => {
         const s = it.rulescore;
         return (
-          <Link href={`/stocks/${it.symbol}`} key={it.symbol}>
-            <Card className="p-4 hover:shadow-md transition">
+          <Link href={`/stocks/${it.symbol}`} key={it.symbol} className="block">
+            <Card className="p-4 hover:shadow-md transition cursor-pointer">
               <div className="flex items-center justify-between">
                 <div className="text-lg font-semibold">{it.symbol}</div>
                 <Badge>{s?.bias ?? '—'}</Badge>

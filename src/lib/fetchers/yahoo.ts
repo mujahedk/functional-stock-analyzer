@@ -2,13 +2,33 @@ import yf from 'yahoo-finance2';
 
 export type Ohlc = { date: string; open:number; high:number; low:number; close:number; volume:number };
 
-export async function fetchDailyOHLC(symbol: string, period = '1y'): Promise<Ohlc[]> {
-  // TODO: allow custom range; for MVP use 1y daily
-  const res = await yf.historical(symbol, { period1: undefined, period2: undefined, interval: '1d' });
-  return res.map(r => ({
-    date: (r.date ?? new Date()).toISOString(),
-    open: r.open ?? 0, high: r.high ?? 0, low: r.low ?? 0, close: r.close ?? 0, volume: r.volume ?? 0
-  }));
+/**
+ * Fetch ~1 year of daily OHLC safely.
+ * Yahoo's `historical()` requires either concrete period1/period2 dates or you must use `chart()` with a `range`.
+ * We pass valid Date objects to avoid validation errors.
+ */
+export async function fetchDailyOHLC(symbol: string, days = 370): Promise<Ohlc[]> {
+  const end = new Date(); // now
+  const start = new Date();
+  start.setDate(end.getDate() - days);
+
+  // NOTE: Passing Date objects is valid. Avoid undefined options.
+  const res = await yf.historical(symbol, {
+    period1: start,
+    period2: end,
+    interval: '1d',
+  });
+
+  return (res ?? [])
+    .filter(r => r && r.open != null && r.close != null && r.high != null && r.low != null)
+    .map(r => ({
+      date: (r.date ?? new Date()).toISOString(),
+      open: r.open as number,
+      high: r.high as number,
+      low:  r.low as number,
+      close: r.close as number,
+      volume: (r.volume ?? 0) as number,
+    }));
 }
 
 export async function fetchQuote(symbol: string) {
