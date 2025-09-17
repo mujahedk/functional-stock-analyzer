@@ -1,6 +1,5 @@
 import yf from 'yahoo-finance2';
-
-export type Ohlc = { date: string; open:number; high:number; low:number; close:number; volume:number };
+import type { Ohlc } from '@/lib/types';
 
 /**
  * Fetch ~1 year of daily OHLC safely.

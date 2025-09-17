@@ -2,14 +2,15 @@
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import Link from "next/link";
+import type { TopScanItem } from '@/lib/types';
 
-export function TopOpportunities({ items }:{ items:any[] }) {
+export function TopOpportunities({ items }: { items: TopScanItem[] }) {
   if (!items?.length) {
     return <div className="text-sm text-muted-foreground">No opportunities yet. Try reloading in a few seconds.</div>;
   }
   return (
     <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-      {items.map((it:any) => {
+      {items.map((it) => {
         const s = it.rulescore;
         return (
           <Link href={`/stocks/${it.symbol}`} key={it.symbol} className="block">

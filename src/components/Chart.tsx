@@ -1,14 +1,15 @@
 'use client';
 import { useEffect, useRef } from 'react';
 import { createChart, ISeriesApi, UTCTimestamp } from 'lightweight-charts';
+import type { Ohlc } from '@/lib/types';
 
-export default function PriceChart({ ohlc }:{ ohlc: any[] }) {
+export default function PriceChart({ ohlc }: { ohlc: Ohlc[] }) {
   const ref = useRef<HTMLDivElement>(null);
   useEffect(() => {
     if (!ref.current || !ohlc?.length) return;
     const chart = createChart(ref.current, { height: 300 });
     const series: ISeriesApi<'Candlestick'> = chart.addCandlestickSeries();
-    series.setData(ohlc.map((d:any) => ({
+    series.setData(ohlc.map((d) => ({
       time: Math.floor(new Date(d.date).getTime()/1000) as UTCTimestamp,
       open: d.open, high: d.high, low: d.low, close: d.close
     })));

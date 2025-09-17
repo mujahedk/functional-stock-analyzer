@@ -3,36 +3,28 @@ import { UNIVERSE } from '@/lib/universe';
 import { fetchDailyOHLC, fetchQuote } from '@/lib/fetchers/yahoo';
 import { sma, rsi, atrp, volZ, priorHigh, linregForecast } from '@/lib/indicators';
 import { computeRuleScore } from '@/lib/scoring';
+import type { TopScanItem } from '@/lib/types';
 
 export const dynamic = 'force-dynamic';
-
-type Item = {
-  symbol: string;
-  quote?: { price: number|null };
-  rulescore: ReturnType<typeof computeRuleScore>;
-  insight: string;
-};
 
 export async function GET() {
   const limit = parseInt(process.env.SCAN_LIMIT ?? '18', 10);
   const symbols = UNIVERSE.slice(0, Math.max(1, limit));
 
-  const results: Item[] = [];
+  const results: TopScanItem[] = [];
   const concurrency = 5;
+
   for (let i = 0; i < symbols.length; i += concurrency) {
     const batch = symbols.slice(i, i + concurrency);
     const settled = await Promise.allSettled(batch.map(scanOne));
-    for (const s of settled) {
-      if (s.status === 'fulfilled' && s.value) results.push(s.value);
-    }
+    for (const s of settled) if (s.status === 'fulfilled' && s.value) results.push(s.value);
   }
 
   results.sort((a, b) => (b.rulescore?.score ?? 0) - (a.rulescore?.score ?? 0));
-  const items = results.slice(0, 10);
-  return NextResponse.json({ items, generatedAt: new Date().toISOString() });
+  return NextResponse.json({ items: results.slice(0, 10), generatedAt: new Date().toISOString() });
 }
 
-async function scanOne(symbol: string): Promise<Item | null> {
+async function scanOne(symbol: string): Promise<TopScanItem | null> {
   try {
     const ohlc = await fetchDailyOHLC(symbol, 370);
     if (!ohlc?.length) return null;
@@ -40,7 +32,7 @@ async function scanOne(symbol: string): Promise<Item | null> {
     const close = ohlc.map(o => o.close);
     const high  = ohlc.map(o => o.high);
     const low   = ohlc.map(o => o.low);
-    const vol   = ohlc.map(o => o.volume);
+    const vol   = ohlc.map(o => o.volume ?? 0);
     const last  = ohlc.length - 1;
 
     const sma20 = sma(close, 20);
@@ -50,7 +42,7 @@ async function scanOne(symbol: string): Promise<Item | null> {
     const atrp14 = atrp(high, low, close, 14);
     const volZ20 = volZ(vol, 20);
     const prior20High = priorHigh(high, 20);
-    const forecast = linregForecast(close, 20);
+    // simple projection is computed on detail route; we don't need forecast here
 
     const rulescore = computeRuleScore({
       price: close[last] ?? null,
