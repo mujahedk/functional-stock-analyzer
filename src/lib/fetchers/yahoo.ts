@@ -1,4 +1,4 @@
-import yf from 'yahoo-finance2';
+import yf from '@/lib/yahooClient';            // ⬅️ use our wrapper
 import type { Ohlc } from '@/lib/types';
 
 /**
@@ -11,12 +11,8 @@ export async function fetchDailyOHLC(symbol: string, days = 370): Promise<Ohlc[]
   const start = new Date();
   start.setDate(end.getDate() - days);
 
-  // NOTE: Passing Date objects is valid. Avoid undefined options.
-  const res = await yf.historical(symbol, {
-    period1: start,
-    period2: end,
-    interval: '1d',
-  });
+  // historical() maps to chart() internally now; passing real dates stays valid.
+  const res = await yf.historical(symbol, { period1: start, period2: end, interval: '1d' });
 
   return (res ?? [])
     .filter(r => r && r.open != null && r.close != null && r.high != null && r.low != null)

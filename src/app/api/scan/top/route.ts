@@ -5,6 +5,7 @@ import { sma, rsi, atrp, volZ, priorHigh, linregForecast } from '@/lib/indicator
 import { computeRuleScore } from '@/lib/scoring';
 import type { TopScanItem } from '@/lib/types';
 
+export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
 export async function GET() {
